@@ -1,17 +1,14 @@
-"""
-ReCode Comms v2 — WebSocket Server
-Features: JSON persistence, password auth, room-based admin, image sharing, sub-rooms
-"""
-
 import asyncio
 import json
 import logging
 import hashlib
+import mimetypes
 import os
 import secrets
 import time
 from datetime import datetime
 import websockets
+from websockets.http11 import Response
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -24,6 +21,7 @@ USERS_FILE = os.path.join(DATA_DIR, "users.json")
 ROOMS_FILE = os.path.join(DATA_DIR, "rooms.json")
 MESSAGES_DIR = os.path.join(DATA_DIR, "messages")
 UPLOADS_DIR = os.path.join(DATA_DIR, "uploads")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ─────────────────────────────────────────────
 # Persistence helpers
@@ -983,6 +981,88 @@ async def handle_client(ws):
 
 
 # ─────────────────────────────────────────────
+# HTTP Static File Server (websockets 16.0 API)
+# ─────────────────────────────────────────────
+
+STATIC_FILES = {
+    "/": "index_v2.html",
+    "/index_v2.html": "index_v2.html",
+    "/chat_v2.html": "chat_v2.html",
+    "/style_v2.css": "style_v2.css",
+    "/index.html": "index.html",
+    "/chat.html": "chat.html",
+    "/style.css": "style.css",
+}
+
+def get_content_type(filepath):
+    ct, _ = mimetypes.guess_type(filepath)
+    return ct or "application/octet-stream"
+
+def process_request(connection, request):
+    """Intercept HTTP requests to serve static files.
+    Return None to let WebSocket upgrade proceed normally."""
+    # WebSocket upgrade — let it through
+    if request.headers.get("Upgrade", "").lower() == "websocket":
+        return None
+
+    path = request.path
+
+    # Serve uploaded images: /data/uploads/<filename>
+    if path.startswith("/data/uploads/"):
+        filename = path.split("/")[-1]
+        filepath = os.path.join(UPLOADS_DIR, filename)
+        if os.path.isfile(filepath):
+            ct = get_content_type(filepath)
+            with open(filepath, "rb") as f:
+                body = f.read()
+            return Response(
+                200, "OK",
+                websockets.datastructures.Headers([
+                    ("Content-Type", ct),
+                    ("Content-Length", str(len(body))),
+                    ("Cache-Control", "public, max-age=3600"),
+                ]),
+                body,
+            )
+        return Response(
+            404, "Not Found",
+            websockets.datastructures.Headers([("Content-Type", "text/plain")]),
+            b"File not found",
+        )
+
+    # Serve known static files
+    if path in STATIC_FILES:
+        filepath = os.path.join(BASE_DIR, STATIC_FILES[path])
+        if os.path.isfile(filepath):
+            ct = get_content_type(filepath)
+            with open(filepath, "rb") as f:
+                body = f.read()
+            return Response(
+                200, "OK",
+                websockets.datastructures.Headers([
+                    ("Content-Type", ct),
+                    ("Content-Length", str(len(body))),
+                ]),
+                body,
+            )
+
+    # Favicon
+    if path == "/favicon.ico":
+        return Response(
+            404, "Not Found",
+            websockets.datastructures.Headers([("Content-Type", "text/plain")]),
+            b"",
+        )
+
+    # Default: redirect to /
+    return Response(
+        301, "Moved Permanently",
+        websockets.datastructures.Headers([("Location", "/")]),
+        b"",
+    )
+
+
+# ─────────────────────────────────────────────
 # Entry Point
 # ─────────────────────────────────────────────
 
@@ -994,9 +1074,17 @@ async def main():
     logger.info(f"Loaded {len(users_db)} users, {len(rooms_db)} rooms")
 
     host = "0.0.0.0"
-    port = 8765
-    logger.info(f"🚀 Server starting on ws://{host}:{port}")
-    async with websockets.serve(handle_client, host, port, max_size=10 * 1024 * 1024):
+    port = int(os.environ.get("PORT", 8765))
+    logger.info(f"🚀 Server starting on http://{host}:{port}")
+    logger.info(f"   WebSocket: ws://{host}:{port}")
+    logger.info(f"   HTTP:      http://{host}:{port}")
+    async with websockets.serve(
+        handle_client,
+        host,
+        port,
+        max_size=10 * 1024 * 1024,
+        process_request=process_request,
+    ):
         logger.info("✅ Server running. Press Ctrl+C to stop.")
         await asyncio.Future()
 
