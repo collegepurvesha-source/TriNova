@@ -58,7 +58,7 @@
   </main>
 
   <script>
-    const WS_URL = 'ws://' + window.location.hostname + ':8765';
+    const WS_URL = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host;
 
     // ── Check if already logged in ──
     const savedUser = localStorage.getItem('rc_username');
