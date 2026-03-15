@@ -27,7 +27,7 @@ ReCode/
 ├── server_v2.py       # WebSocket server (auth, rooms, persistence, images)
 ├── index_v2.html      # Login / Register page
 ├── chat_v2.html       # Main chat interface
-├── style_v2.css       # Minecraft pixel art theme (pastel coffee & pink)
+├── style_v2.css       # pixel art theme (pastel coffee & pink)
 ├── requirements.txt   # Python dependencies
 ├── data/              # Auto-created on first run
 │   ├── users.json     # Registered accounts (hashed passwords)
