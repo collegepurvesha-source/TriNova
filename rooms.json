@@ -1,0 +1,64 @@
+{
+  "dev-team": {
+    "name": "dev-team",
+    "code": "934752",
+    "creator": "alice",
+    "admins": [
+      "alice"
+    ],
+    "moderators": [],
+    "members": [],
+    "pending": [],
+    "parent": null
+  },
+  "dev-team/recode": {
+    "name": "recode",
+    "code": "BE527B",
+    "creator": "alice",
+    "admins": [
+      "alice"
+    ],
+    "moderators": [],
+    "members": [],
+    "pending": [],
+    "parent": "dev-team"
+  },
+  "recode": {
+    "name": "recode",
+    "code": "213AD7",
+    "creator": "purvesha",
+    "admins": [
+      "purvesha"
+    ],
+    "moderators": [],
+    "members": [],
+    "pending": [],
+    "parent": null
+  },
+  "recode/frontend": {
+    "name": "frontend",
+    "code": "B2A828",
+    "creator": "purvesha",
+    "admins": [
+      "purvesha"
+    ],
+    "moderators": [],
+    "members": [
+      "yasaswi"
+    ],
+    "pending": [],
+    "parent": "recode"
+  },
+  "classroom": {
+    "name": "classroom",
+    "code": "B8EC34",
+    "creator": "purvesha",
+    "admins": [
+      "purvesha"
+    ],
+    "moderators": [],
+    "members": [],
+    "pending": [],
+    "parent": null
+  }
+}

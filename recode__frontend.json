@@ -1,0 +1,29 @@
+[
+  {
+    "type": "message",
+    "from": "purvesha",
+    "role": "admin",
+    "room": "recode/frontend",
+    "content": "hi",
+    "ts": "10:39",
+    "full_ts": "2026-03-15 10:39:57"
+  },
+  {
+    "type": "message",
+    "from": "purvesha",
+    "role": "admin",
+    "room": "recode/frontend",
+    "content": "heelo",
+    "ts": "10:41",
+    "full_ts": "2026-03-15 10:41:37"
+  },
+  {
+    "type": "message",
+    "from": "yasaswi",
+    "role": "member",
+    "room": "recode/frontend",
+    "content": "purvesha hi",
+    "ts": "10:42",
+    "full_ts": "2026-03-15 10:42:22"
+  }
+]
