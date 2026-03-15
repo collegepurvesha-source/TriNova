@@ -206,7 +206,7 @@
   'use strict';
 
   // ── Constants ──
-  const WS_URL = 'ws://' + window.location.hostname + ':8765';
+  const WS_URL = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host;
   const ROLE_SYMBOLS = { admin: '👑', moderator: '🛡️', member: '👤' };
   const COMMANDS_HINT = {
     '/help': 'List available commands',
