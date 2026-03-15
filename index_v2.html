@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReCode Comms — Sign In</title>
+  <meta name="description" content="Secure messaging platform. Register or log in to start chatting." />
+  <link rel="stylesheet" href="style_v2.css" />
+</head>
+<body class="login-page">
+
+  <main class="login-card" role="main">
+    <div class="login-logo">
+      <div class="logo-icon" aria-hidden="true">💬</div>
+      <span class="logo-text">ReCode Comms</span>
+    </div>
+
+    <h1 id="auth-heading">Welcome back</h1>
+    <p class="subtitle" id="auth-subtitle">Sign in to continue your conversations</p>
+
+    <!-- Tab switcher -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- Login Form -->
+    <form id="login-form" class="auth-form active" autocomplete="off">
+      <div class="form-group">
+        <label for="login-username">Username</label>
+        <input type="text" id="login-username" name="username" placeholder="e.g. alice" maxlength="20" required autofocus autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" name="password" placeholder="Your password" required autocomplete="off" />
+      </div>
+      <button type="submit" class="btn-primary" id="login-btn">Sign In →</button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="register-form" class="auth-form" autocomplete="off">
+      <div class="form-group">
+        <label for="reg-username">Username</label>
+        <input type="text" id="reg-username" name="username" placeholder="Choose a username" maxlength="20" required autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="reg-password">Password</label>
+        <input type="password" id="reg-password" name="password" placeholder="Min. 4 characters" required autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="reg-confirm">Confirm Password</label>
+        <input type="password" id="reg-confirm" name="confirm" placeholder="Re-enter password" required autocomplete="off" />
+      </div>
+      <button type="submit" class="btn-primary" id="register-btn">Create Account →</button>
+    </form>
+
+    <div class="error-msg" id="error-msg" role="alert" aria-live="polite"></div>
+  </main>
+
+  <script>
+    const WS_URL = 'ws://' + window.location.hostname + ':8765';
+
+    // ── Check if already logged in ──
+    const savedUser = localStorage.getItem('rc_username');
+    const savedToken = localStorage.getItem('rc_token');
+    if (savedUser && savedToken) {
+      window.location.href = 'chat_v2.html';
+    }
+
+    // ── Tab Switching ──
+    function switchTab(tab) {
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      document.getElementById('login-form').classList.toggle('active', tab === 'login');
+      document.getElementById('register-form').classList.toggle('active', tab === 'register');
+      document.getElementById('error-msg').style.display = 'none';
+
+      if (tab === 'login') {
+        document.getElementById('auth-heading').textContent = 'Welcome back';
+        document.getElementById('auth-subtitle').textContent = 'Sign in to continue your conversations';
+      } else {
+        document.getElementById('auth-heading').textContent = 'Create account';
+        document.getElementById('auth-subtitle').textContent = 'Join the team and start chatting';
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function clearError() {
+      document.getElementById('error-msg').style.display = 'none';
+    }
+
+    // Clear errors on input
+    document.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('input', clearError);
+    });
+
+    // ── WebSocket Auth ──
+    function wsAuth(type, username, password) {
+      return new Promise((resolve, reject) => {
+        const ws = new WebSocket(WS_URL);
+        const timeout = setTimeout(() => {
+          ws.close();
+          reject(new Error('Connection timed out. Is the server running?'));
+        }, 8000);
+
+        ws.addEventListener('open', () => {
+          ws.send(JSON.stringify({ type, username, password }));
+        });
+
+        ws.addEventListener('message', (evt) => {
+          clearTimeout(timeout);
+          const data = JSON.parse(evt.data);
+          ws.close();
+          if (data.type === 'error') {
+            reject(new Error(data.content));
+          } else if (data.type === 'welcome') {
+            resolve(data);
+          } else {
+            reject(new Error('Unexpected response.'));
+          }
+        });
+
+        ws.addEventListener('error', () => {
+          clearTimeout(timeout);
+          reject(new Error('Cannot connect to server. Make sure server_v2.py is running.'));
+        });
+
+        ws.addEventListener('close', (evt) => {
+          clearTimeout(timeout);
+          if (!evt.wasClean && evt.code !== 1000) {
+            // might already be resolved/rejected
+          }
+        });
+      });
+    }
+
+    // ── Login ──
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      if (!username) { showError('Please enter a username.'); return; }
+      if (!password) { showError('Please enter your password.'); return; }
+
+      const btn = document.getElementById('login-btn');
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      try {
+        const res = await wsAuth('login', username, password);
+        localStorage.setItem('rc_username', res.username);
+        localStorage.setItem('rc_password', password);
+        localStorage.setItem('rc_token', Date.now().toString());
+        window.location.href = 'chat_v2.html';
+      } catch (err) {
+        showError(err.message);
+        btn.disabled = false;
+        btn.textContent = 'Sign In →';
+      }
+    });
+
+    // ── Register ──
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('reg-username').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const confirm = document.getElementById('reg-confirm').value;
+
+      if (!username) { showError('Please enter a username.'); return; }
+      if (username.length < 2) { showError('Username must be at least 2 characters.'); return; }
+      if (!/^[a-zA-Z0-9_-]+$/.test(username)) { showError('Only letters, numbers, underscores, and hyphens allowed.'); return; }
+      if (!password || password.length < 4) { showError('Password must be at least 4 characters.'); return; }
+      if (password !== confirm) { showError('Passwords do not match.'); return; }
+
+      const btn = document.getElementById('register-btn');
+      btn.disabled = true;
+      btn.textContent = 'Creating account…';
+
+      try {
+        const res = await wsAuth('register', username, password);
+        localStorage.setItem('rc_username', res.username);
+        localStorage.setItem('rc_password', password);
+        localStorage.setItem('rc_token', Date.now().toString());
+        window.location.href = 'chat_v2.html';
+      } catch (err) {
+        showError(err.message);
+        btn.disabled = false;
+        btn.textContent = 'Create Account →';
+      }
+    });
+  </script>
+</body>
+</html>
