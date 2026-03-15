@@ -16,7 +16,6 @@ A real-time, room-based messaging platform with role management, image sharing, 
 | 🖼️ **Image Sharing** | Share images inline with captions, click to view full-size |
 | 📁 **Sub-Rooms** | Create rooms inside rooms for topic-based discussions |
 | 🔒 **Single Session** | One browser per user — prevents duplicate logins |
-| 🌐 **LAN Ready** | Server binds to `0.0.0.0` — share your IP and chat with your team |
 | 🎨 **Minecraft Pixel Art UI** | 8-bit pixel art theme with Press Start 2P font, pastel coffee & pink palette, 3D block buttons, and hard dark borders |
 
 ---
@@ -94,25 +93,6 @@ Go to **http://localhost:3000/index_v2.html** in your browser.
 
 ---
 
-## 🌐 LAN Setup (Chat With Your Team)
-
-The server already binds to `0.0.0.0`, so anyone on your local network can connect:
-
-1. Find your IP address:
-   ```bash
-   # Windows
-   ipconfig
-   # Look for IPv4 Address, e.g. 192.168.1.42
-   ```
-
-2. Share the URL with your team:
-   ```
-   http://192.168.1.42:3000/index_v2.html
-   ```
-
-3. Everyone registers their own account and joins rooms using codes.
-
----
 
 ## 👑 Role System
 
