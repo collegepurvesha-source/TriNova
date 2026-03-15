@@ -54,8 +54,8 @@ ReCode/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/ReCode.git
-cd ReCode
+https://github.com/collegepurvesha-source/TriNova.git
+cd TriNova
 ```
 
 ### 2. Install dependencies
@@ -89,9 +89,6 @@ python -m http.server 3000
 
 Go to **http://localhost:3000/index_v2.html** in your browser.
 
-> ⚠️ **Important:** Make sure the old `server.py` is NOT running, or it will steal port 8765.
-
----
 
 
 ## 👑 Role System
