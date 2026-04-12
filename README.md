@@ -87,7 +87,7 @@ python -m http.server 3000
 
 ### 5. Open the app
 
-Go to **http://localhost:3000/index_v2.html** in your browser.
+Go to **https://trinova-3.onrender.com** in your browser.
 
 
 
